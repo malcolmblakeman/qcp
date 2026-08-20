@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+
+    <title>Quoridor Corner Puzzles</title>
+
+    <meta name="description" content="Mini puzzle game: rearrange the four pawns in the board corner - a Quoridor spinoff">
+    <meta name="theme-color" content="#4475DD">
+
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 16 16%27%3E%3Crect width=%2716%27 height=%2716%27 rx=%273%27 fill=%27%234475DD%27/%3E%3Ccircle cx=%275.5%27 cy=%275.5%27 r=%272.6%27 fill=%27%23c3a417%27/%3E%3Ccircle cx=%2710.5%27 cy=%2710.5%27 r=%272.6%27 fill=%27%233e7c4a%27/%3E%3C/svg%3E">
+    <link rel="stylesheet" href="style.css">
+
+    <script src="js/game.js"></script>
+    <script src="js/puzzles.js"></script>
+    <script src="js/view.js"></script>
+    <script src="js/controller.js"></script>
+</head>
+<body>
+    <div class="gridcontainer0">
+        <div class="title_row">
+            <h1>Quoridor Corner Puzzles</h1>
+            <select id="puzzle_select" class="seat_select puzzle_select" aria-label="choose puzzle"></select>
+        </div>
+        <div class="gridcontainer1">
+            <div class="button_container above left">
+                <button type="button" id="restart_button" class="button above undo">restart</button>
+                <button type="button" id="undo_button" class="button above redo">undo</button>
+            </div>
+            <div class="button_container above right">
+                <button type="button" id="hint_button" class="button above hint">hint</button>
+                <button type="button" id="about_button" class="button above about">about</button>
+            </div>
+        </div>
+        <div id="board_table_container">
+            <div class="fade_box in hidden" id="about_box">
+                <div>
+                    <h1>Corner Puzzles</h1>
+                    <p>
+                        A mini puzzle game spun off from
+                        <a href="https://github.com/gorisanson/quoridor-ai" target="_blank" rel="noopener">Kyutae Lee's Quoridor AI</a>
+                        (4-player adaptation).
+                    </p>
+                    <p>
+                        <span class="thick">Goal:</span> rearrange the four pawns in the marked 2x2 corner block
+                        into the <span class="thick">target arrangement</span> shown at the side of the board.
+                    </p>
+                    <p>
+                        <span class="thick">Rules:</span><br>
+                        - Turn order is fixed: Yellow &rarr; Black &rarr; Blue &rarr; Green; every pawn moves every turn<br>
+                        - Moves: step to an adjacent cell; jump straight over an adjacent pawn;<br>
+                        &nbsp;&nbsp;diagonal jump beside a pawn when the straight jump is impossible<br>
+                        - No walls, and no pawn may ever land on its own goal line<br>
+                        &nbsp;&nbsp;(the colored bars at the board edges show whose goal line it is)<br>
+                        - Moves stay inside the un-shaded corner region<br>
+                        - The pawn starting on the corner cell always moves first
+                    </p>
+                    <p>
+                        <span class="thick">Hint:</span> the hint button re-solves the puzzle from the current
+                        position (provably shortest) and shows the next best move. Par = the optimal move count.
+                    </p>
+                    <p><span class="thick">Stars:</span> 3 for par, 2 within par+2, otherwise 1.</p>
+                    <button type="button" id="about_close_button" class="close">close</button>
+                </div>
+            </div>
+            <table id="board_table"></table>
+        </div>
+        <div class="gridcontainer2">
+            <div id="puzzle_info_box">
+                <div class="target_area">
+                    <div id="target_grid"></div>
+                    <div class="target_caption">target</div>
+                </div>
+                <div class="stats">
+                    <div class="stat"><span class="stat_label">moves</span><span class="stat_value" id="stat_moves">0</span></div>
+                    <div class="stat"><span class="stat_label">par</span><span class="stat_value" id="stat_par">-</span></div>
+                    <div class="stat"><span class="stat_label">hints</span><span class="stat_value" id="stat_hints">0</span></div>
+                </div>
+                <div id="hint_text"></div>
+            </div>
+            <div id="message_box">&nbsp;</div>
+            <div class="button_container below">
+                <button type="button" id="cancel_button" class="button below cancel">cancel</button>
+                <button type="button" id="confirm_button" class="button below confirm">confirm</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        "use strict";
+        const controller = new Controller();
+        const view = new MinigameView(controller);
+        controller.view = view;
+        controller.loadPuzzle(PUZZLES[0].id);
+    </script>
+    <script>
+        "use strict";
+        // touch device workaround (same as the main game)
+        window.addEventListener('touchstart', function onFirstTouch() {
+            view.isHoverPossible = false;
+            view.button.confirm.style.display = "inline-block";
+            view.button.cancel.style.display = "inline-block";
+            view.setUIForTouchDevice();
+            window.removeEventListener('touchstart', onFirstTouch, false);
+        }, false);
+    </script>
+    <noscript>This site needs JavaScript enabled to work.</noscript>
+</body>
+</html>

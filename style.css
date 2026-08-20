@@ -1,0 +1,778 @@
+/* 4-player version: original style by Kyutae Lee, extended with two more
+*  pawn colors and a seat-selection dialog. */
+:root {
+    --board-table-side-length: 90vmin;
+    --long-short-ratio: 3.2;
+    --short-length-number-in-board-table: calc(9 * var(--long-short-ratio) + 8);
+    --short-length: calc(var(--board-table-side-length) / var(--short-length-number-in-board-table));
+    --long-length: calc(var(--long-short-ratio) * var(--short-length));
+    --wall-gap: calc(var(--short-length) * 0.25);
+    --wall-length: calc(2 * var(--long-length) + var(--short-length) - 2 * var(--wall-gap));
+    --wall-width: calc(var(--short-length) - 2 * var(--wall-gap));
+    --font-size: 18px;
+    --color-black: #232629;
+    /* player colors: change here and they update everywhere
+    *  (pawns, move hints, wall-count symbols, goal lines) */
+    --pawn0-color: rgb(195, 164, 23); /* Yellow - North */
+    --pawn1-color: rgb(51, 25, 25);   /* Black  - East  */
+    --pawn2-color: rgb(36, 66, 175);  /* Blue   - South */
+    --pawn3-color: rgb(34, 124, 74);  /* Green  - West  */
+}
+/* size of iPad screen is 768px x 1024px in portrait mode */
+@media only screen and (min-width: 768px) and (min-height: 768px) {
+    :root {
+        --font-size: 30px;
+    }
+}
+@media only screen and (min-width: 768px), (orientation: landscape) {
+    :root {
+        --board-table-side-length: 70vmin;
+    }
+}
+html {
+    box-sizing: border-box;
+}
+*, *:before, *:after {
+    box-sizing: inherit;
+}
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    color: var(--color-black);
+}
+a,
+a:link,
+a:visited {
+    color: #0074cc;
+    text-decoration: none;
+}
+a:hover {
+    color: #0a95ff;
+}
+a:active {
+    color: #0a95ff;
+}
+.gridcontainer0 {
+    display: grid;
+    width: 100%;
+    height: 100vh;
+    justify-content: center;
+    align-content: center;
+    grid-template-rows: calc(3 * var(--font-size)) var(--board-table-side-length) calc(12.5 * var(--font-size));
+    grid-template-columns: var(--board-table-side-length);
+    grid-gap: 10px;
+}
+.gridcontainer1 {
+    display: grid;
+    justify-content: center;
+    align-content: center;
+    grid-template-rows: 1fr;
+    grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+}
+.gridcontainer2 {
+    display: grid;
+    justify-content: center;
+    align-content: center;
+    grid-template-rows: auto auto auto;
+    grid-template-columns: 1fr 1fr;
+}
+h1 {
+    font-size: calc(1.2 * var(--font-size));
+}
+#board_table_container {
+    position: relative;
+    grid-row-start: 2;
+}
+table {
+    table-layout: fixed;
+    border-radius: 0.5%;
+    background-color: rgb(68, 117, 221);
+    border-collapse: collapse;
+    text-align: center;
+    width: var(--board-table-side-length);
+    height: var(--board-table-side-length);
+    padding: 0;
+}
+td {
+    position: relative;
+    padding: 0;
+}
+tr.row {
+    height: var(--long-length);
+}
+td.col {
+    width: var(--long-length);
+}
+tr.between_rows {
+    height: var(--short-length);
+}
+td.between_cols {
+    width: var(--short-length);
+}
+tr.row td.col {
+    background-color: rgb(207, 207, 207);
+    border-radius: 5%;
+}
+div.pawn {
+    display: inline-block;
+    width: calc(var(--long-length) * 0.7);
+    height: calc(var(--long-length) * 0.7);
+    border-radius: 50%;
+    vertical-align: middle;
+}
+div.pawn.pawn0 {
+    background-color: var(--pawn0-color);
+}
+div.pawn.pawn1 {
+    background-color: var(--pawn1-color);
+}
+div.pawn.pawn2 {
+    background-color: var(--pawn2-color);
+}
+div.pawn.pawn3 {
+    background-color: var(--pawn3-color);
+}
+div.horizontal_wall, div.vertical_wall {
+    display: inline-block;
+    position: absolute;
+    left: var(--wall-gap);
+    top: var(--wall-gap);
+    background-color: rgb(202, 168, 106);
+}
+div.horizontal_wall {
+    width: var(--wall-length);
+    height: var(--wall-width);
+}
+div.vertical_wall {
+    width: var(--wall-width);
+    height: var(--wall-length);
+}
+div.horizontal_wall.shadow, div.vertical_wall.shadow {
+    opacity: 0.5;
+}
+div.pawn.shadow {
+    opacity: 0.3;
+}
+#number_of_left_walls_box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--font-size);
+    text-align: center;
+    vertical-align: middle;
+}
+div.pawn.symbol {
+    vertical-align: middle;
+    width: var(--font-size);
+    height: var(--font-size);
+    margin-right: calc(var(--font-size) / 2);
+}
+div.horizontal_wall.symbol {
+    position: initial;
+    vertical-align: middle;
+    width: calc(var(--font-size) * (5 / 3));
+    height: calc(var(--font-size) * (2 / 5));
+    margin-left: calc(var(--font-size) / 6);
+    margin-right: calc(var(--font-size) / 6);
+}
+div.mul_sign_wall_num_container {
+    display: inline-block;
+    vertical-align: middle;
+}
+div.multiplication_sign {
+    display: inline;
+    vertical-align: middle;
+    margin-left: calc(var(--font-size) / 6);
+    margin-right: calc(var(--font-size) / 6);
+}
+div.wall_num {
+    display: inline-block;
+    vertical-align: middle;
+    width: var(--font-size);
+    text-align: center;
+}
+.fade_box {
+    position: absolute;
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-evenly;
+    top: calc((var(--board-table-side-length) - 9 * var(--long-length)) / 2);
+    left: 0;
+    width: var(--board-table-side-length);
+    height: calc(9 * var(--long-length));
+    font-size: var(--font-size);
+    padding-left: var(--font-size);
+    padding-right: var(--font-size);
+    text-align: center;
+    z-index: -1;
+    visibility: hidden;
+    opacity: 0;
+}
+.fade_box.in {
+    z-index: 10;
+    visibility: visible;
+    opacity: 1;
+    animation-name: fade_in;
+    animation-duration: 1s;
+}
+.fade_box.in.about {
+    justify-content: flex-start;
+    top: 0;
+    height: calc(3 * var(--board-table-side-length));
+    overflow: visible;
+    text-align: left;
+}
+@keyframes fade_in {
+    0%   {opacity: 0;}
+    100% {opacity: 1;}
+}
+.fade_box.inout {
+    z-index: -1;
+    visibility: hidden;
+    opacity: 0;
+    animation-name: fade_inout;
+}
+@keyframes fade_inout {
+    0%   {visibility: visible; z-index: 10; opacity: 0;}
+    25%  {opacity: 1;}
+    75%  {opacity: 1;}
+    100% {visibility: hidden; z-index: 10; opacity: 0;}
+}
+#about_box {
+    background-color: rgba(255, 255, 255, 0.8);
+}
+#choose_players_message_box, #restart_message_box, #game_result_message_box, button.restart {
+    background-color: rgba(0, 81, 255, 0.85);
+}
+#note_message_box {
+    background-color: rgba(255, 0, 0, 0.8);
+    animation-duration: 3s;
+}
+#game_result_message_box {
+    animation-duration: 10s;
+}
+.button_container.above.left, .button_container.below {
+    grid-column: 1 / span 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.button_container.above.left {
+    grid-column: 1 / span 3;
+}
+.button_container.above.middle {
+    grid-column-start: 4;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+}
+.button_container.above.right {
+    grid-column-start: 5;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+}
+button.button {
+    display: inline-block;
+    height: calc(3 * var(--font-size));
+    width: 100%;
+    border: none;
+    border-radius: 10px;
+    padding: 0;
+    color: white;
+    font-size: calc(var(--font-size) * 1.2);
+    text-align: center;
+    text-decoration: none;
+    margin: 2%;
+}
+button.start, button.ai_level, button.close, button.restart_yes_no {
+    display: inline-block;
+    height: calc(2 * var(--font-size));
+    width: calc(4 * var(--font-size));
+    border: none;
+    margin: 2px;
+    padding: 0;
+    background-color: white;
+    color: var(--color-black);
+    font-size: var(--font-size);
+    text-align: center;
+    text-decoration: none;
+    border-radius: 10px;
+}
+button.start {
+    width: calc(6 * var(--font-size));
+    font-weight: bold;
+}
+button.close {
+    background-color: rgb(50, 50, 50);
+    color: white;
+    display: block;
+    margin: 0 auto;
+}
+.button.cancel {
+    background-color: white;
+    color: var(--color-black);
+    border: 2px solid rgb(85, 85, 85);
+}
+.button.confirm {
+    background-color: rgb(0, 71, 186);
+}
+.button.undo {
+    background-color: rgb(36, 160, 112);
+}
+.button.redo {
+    background-color: rgb(36, 131, 160);
+}
+.button.aido {
+    background-color: rgb(36, 84, 160);
+}
+.button.about {
+    background-color: rgb(50, 50, 50);
+}
+/* goal lines: subtle line outside each edge of the board in the color of the
+*  player whose goal line that edge is (bottom: Yellow/North, left: Black/East,
+*  top: Blue/South, right: Green/West) */
+#goal_lines {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+.goal_line {
+    position: absolute;
+    --thickness: calc(var(--board-table-side-length) * 0.008);
+    --gap: calc(var(--board-table-side-length) * 0.008);
+}
+.goal_line.bottom {
+    left: 0;
+    right: 0;
+    bottom: calc(-1 * (var(--gap) + var(--thickness)));
+    height: var(--thickness);
+    background-color: var(--pawn0-color); /* pawn0 (North's goal) */
+}
+.goal_line.top {
+    left: 0;
+    right: 0;
+    top: calc(-1 * (var(--gap) + var(--thickness)));
+    height: var(--thickness);
+    background-color: var(--pawn2-color); /* pawn2 (South's goal) */
+}
+.goal_line.left {
+    top: 0;
+    bottom: 0;
+    left: calc(-1 * (var(--gap) + var(--thickness)));
+    width: var(--thickness);
+    background-color: var(--pawn1-color); /* pawn1 (East's goal) */
+}
+.goal_line.right {
+    top: 0;
+    bottom: 0;
+    right: calc(-1 * (var(--gap) + var(--thickness)));
+    width: var(--thickness);
+    background-color: var(--pawn3-color); /* pawn3 (West's goal) */
+}
+
+#message_box {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--font-size);
+    text-align: center;
+    text-decoration: none;
+}
+/* advantage pinwheel (four true squares, area = win probability) */
+#advantage_box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    grid-column: 2;
+    grid-row: 1;
+}
+#message_box {
+    grid-column: 1 / span 2;
+    grid-row: 2;
+}
+#advantage_svg {
+    display: block;
+    width: min(100%, calc(6 * var(--font-size)));
+    height: auto;
+    max-height: calc(6 * var(--font-size));
+    background-color: #fff;
+    border: 1px solid #d9dde5;
+    border-radius: 10px;
+    opacity: 1;
+    transition: opacity 0.3s;
+}
+#advantage_box.stale #advantage_svg {
+    opacity: 0.45;
+}
+#advantage_box.hidden {
+    display: none;
+}
+.win_pct.hidden {
+    display: none;
+}
+.button.eval {
+    background-color: rgb(90, 90, 90);
+}
+#number_of_left_walls_box > div {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.win_pct {
+    font-weight: bold;
+    font-variant-numeric: tabular-nums;
+    margin-left: calc(var(--font-size) / 4);
+    min-width: calc(2.4 * var(--font-size));
+    display: inline-block;
+    text-align: right;
+    font-size: calc(0.8 * var(--font-size));
+}
+#progress_bar {
+    position: absolute;
+    z-index: -1;
+    top: 15%;
+    left: 0;
+    /*width: width is set on style property of progress_bar element;*/
+    height: 70%;
+    background-color: rgb(82, 153, 247);
+}
+span.no_wrap {
+    white-space: nowrap;
+}
+span.thick {
+    font-weight: 900;
+}
+div.pawn.hidden {
+    visibility: hidden;
+}
+div.pawn.clicked {
+    opacity: 0.7;
+}
+.fade_box.in.hidden, button.button.hidden, input.hidden, label.dev_label.hidden {
+    display: none;
+}
+label.dev_label {
+    font-size: calc(0.6 * var(--font-size));
+    margin: 2px 6px;
+    white-space: nowrap;
+}
+label.dev_label input {
+    margin-left: 4px;
+    width: calc(3 * var(--font-size));
+}
+.button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+input {
+    width: calc(3 * var(--font-size));
+}
+p.developed_by, p.release_date, p.last_updated {
+    font-size: calc(0.6 * var(--font-size));
+}
+p.release_date, p.last_updated {
+    margin-block-start: 0.4em;
+    margin-block-end: 0.4em;
+}
+/* seat selection dialog */
+.seat_row {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    margin: 2px 0;
+}
+.seat_row div.pawn.symbol {
+    flex: none;
+    margin-right: calc(var(--font-size) / 2);
+}
+.seat_row .seat_name {
+    flex: 1;
+    text-align: left;
+    white-space: nowrap;
+}
+select.seat_select {
+    font-size: calc(0.8 * var(--font-size));
+    padding: 2px 4px;
+    border: none;
+    border-radius: 6px;
+    background-color: white;
+    color: var(--color-black);
+    max-width: 45%;
+}
+span.small {
+    font-size: calc(0.6 * var(--font-size));
+}
+@media only screen and (min-width: 768px), (orientation: landscape) {
+    .gridcontainer0 {
+        grid-template-rows: calc(3 * var(--font-size)) var(--board-table-side-length);
+        grid-template-columns: var(--board-table-side-length) calc(95vmin - var(--board-table-side-length));
+    }
+    .gridcontainer2 {
+        display: grid;
+        grid-row-start: 2;
+        grid-column-start: 2;
+        grid-template-columns: 1fr;
+        grid-template-rows: calc(6 * var(--font-size)) calc(4 * var(--font-size)) auto 1fr;
+    }
+    .button_container.below {
+        grid-column: unset;
+        flex-direction: column-reverse;
+        justify-content: flex-start;
+    }
+    #message_box {
+        grid-column: auto;
+        grid-row: auto;
+    }
+    #advantage_box {
+        grid-column: auto;
+        grid-row: auto;
+    }
+    #advantage_svg {
+        width: min(100%, calc(8 * var(--font-size)));
+        max-height: none;
+    }
+}
+@media only screen and (min-width: 768px) and (min-height: 768px) {
+    .fade_box {
+        top: calc((var(--board-table-side-length) - 7 * var(--long-length)) / 2);
+        left: 0;
+        width: var(--board-table-side-length);
+        height: calc(7 * var(--long-length));
+    }
+}
+/* For iPhone 5&6 landscape */
+@media only screen and (max-height: 375px) and (min-width: 568px) and (orientation: landscape) {
+    .gridcontainer0 {
+        grid-template-columns: var(--board-table-side-length) calc(105vmin - var(--board-table-side-length));
+    }
+}
+@media (hover: hover) {
+    #confirm_button, #cancel_button {
+        display: none;
+    }
+    div.pawn.shadow:hover {
+        opacity: 0.7;
+    }
+    button.ai_level, button.restart_yes_no, button.start {
+        opacity: 0.9;
+    }
+    button.ai_level:hover, button.restart_yes_no:hover, button.start:hover {
+        opacity: 1;
+    }
+}
+
+/* ================= corner-puzzle minigame additions ================= */
+.gridcontainer0 {
+    grid-template-rows: calc(2.6 * var(--font-size)) calc(3 * var(--font-size)) var(--board-table-side-length) calc(12.5 * var(--font-size));
+}
+.title_row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: calc(var(--font-size));
+    flex-wrap: wrap;
+}
+.title_row h1 {
+    font-size: calc(1.15 * var(--font-size));
+    margin: 0;
+}
+#puzzle_select.puzzle_select {
+    font-size: calc(0.8 * var(--font-size));
+    padding: 4px 8px;
+    border: none;
+    border-radius: 8px;
+    background-color: white;
+    color: var(--color-black);
+    max-width: 60%;
+}
+.button.hint {
+    background-color: rgb(202, 140, 30);
+}
+tr.row td.col.outside_region {
+    background-color: rgb(178, 184, 196);
+}
+tr.row td.col.block_cell {
+    background-color: rgb(238, 234, 208);
+    outline: 3px dashed rgb(120, 90, 40);
+    outline-offset: -3px;
+}
+#puzzle_info_box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: calc(1.4 * var(--font-size));
+    flex-wrap: wrap;
+}
+.target_area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+#target_grid {
+    display: inline-block;
+    background-color: rgb(68, 117, 221);
+    border-radius: 6px;
+    padding: 4px;
+}
+.target_row {
+    display: flex;
+}
+.target_cell {
+    width: calc(1.5 * var(--font-size));
+    height: calc(1.5 * var(--font-size));
+    background-color: rgb(238, 234, 208);
+    border-radius: 4px;
+    margin: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.target_cell div.pawn {
+    width: calc(0.95 * var(--font-size));
+    height: calc(0.95 * var(--font-size));
+}
+.target_caption {
+    font-size: calc(0.6 * var(--font-size));
+    color: #697386;
+    margin-top: 2px;
+}
+.stats {
+    display: flex;
+    gap: calc(var(--font-size) * 0.8);
+}
+.stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.stat_label {
+    font-size: calc(0.55 * var(--font-size));
+    color: #697386;
+}
+.stat_value {
+    font-size: calc(1.1 * var(--font-size));
+    font-weight: bold;
+    font-variant-numeric: tabular-nums;
+}
+#hint_text {
+    font-size: calc(0.7 * var(--font-size));
+    color: rgb(150, 100, 20);
+    min-height: calc(1.6 * var(--font-size));
+    max-width: 100%;
+    text-align: center;
+}
+.hint_marker {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: calc(var(--font-size) * 1.1);
+    font-weight: 900;
+    color: rgb(202, 140, 30);
+    text-shadow: 0 0 4px white, 0 0 4px white;
+    animation: hint_pulse 0.9s ease-in-out infinite;
+    pointer-events: none;
+    z-index: 5;
+}
+@keyframes hint_pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.35); opacity: 0.65; }
+}
+div.pawn.hint_source {
+    box-shadow: 0 0 0 4px rgba(202, 140, 30, 0.8);
+}
+#win_box {
+    background-color: rgba(36, 124, 74, 0.92);
+    color: white;
+}
+#win_box h2 { margin: 0 0 8px 0; }
+#win_box p { margin: 4px 0 12px 0; }
+@media only screen and (min-width: 768px), (orientation: landscape) {
+    .gridcontainer0 {
+        grid-template-rows: calc(2.4 * var(--font-size)) calc(3 * var(--font-size)) var(--board-table-side-length);
+        grid-template-columns: var(--board-table-side-length) calc(95vmin - var(--board-table-side-length));
+    }
+    .gridcontainer2 {
+        grid-row: 2 / span 2;
+        grid-column-start: 2;
+        grid-template-rows: auto auto 1fr;
+        align-content: start;
+        gap: calc(var(--font-size));
+    }
+}
+
+/* ============ grid placement fix (title row added -> pin every row explicitly) ============ */
+.title_row {
+    grid-row: 1;
+    grid-column: 1;
+}
+.gridcontainer1 {
+    grid-row: 2;
+    grid-column: 1;
+}
+#board_table_container {
+    grid-row: 3;
+    grid-column: 1;
+}
+.gridcontainer2 {
+    grid-row: 4;
+    grid-column: 1;
+}
+#puzzle_info_box {
+    grid-column: 1 / span 2;
+}
+@media only screen and (min-width: 768px), (orientation: landscape) {
+    .title_row {
+        grid-row: 1;
+        grid-column: 1 / span 2;
+    }
+    .gridcontainer1 {
+        grid-row: 2;
+        grid-column: 1;
+    }
+    #board_table_container {
+        grid-row: 3;
+        grid-column: 1;
+    }
+    .gridcontainer2 {
+        grid-row: 2 / span 2;
+        grid-column: 2;
+    }
+    #puzzle_info_box {
+        grid-column: 1;
+    }
+}
+
+/* ============ title row overflow fix ============ */
+.gridcontainer0 {
+    grid-template-rows: auto calc(3 * var(--font-size)) var(--board-table-side-length) auto;
+}
+.title_row {
+    flex-wrap: wrap;
+    min-height: calc(2.2 * var(--font-size));
+}
+#puzzle_select.puzzle_select {
+    max-width: 60%;
+    flex-shrink: 1;
+    min-width: 0;
+}
+@media only screen and (min-width: 768px), (orientation: landscape) {
+    .gridcontainer0 {
+        grid-template-rows: auto calc(3 * var(--font-size)) var(--board-table-side-length);
+    }
+    .title_row {
+        flex-wrap: nowrap;
+    }
+    .title_row h1 {
+        font-size: calc(0.95 * var(--font-size));
+        white-space: nowrap;
+    }
+    #puzzle_select.puzzle_select {
+        max-width: 44%;
+    }
+}
