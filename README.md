@@ -46,6 +46,8 @@ real game engine. ## Credits & License
 Engine derived from [Kyutae Lee's Quoridor AI](https://github.com/gorisanson/quoridor-ai)
 (MIT), adapted to 4 players, then spun off into this puzzle game. See `LICENSE`.
 
+# Teaser for 4 Player Quoridor 'Coming Soon!'
+
 ## Tests
 
 `tests/` contains a logic test (all puzzles solvable at par through the real
