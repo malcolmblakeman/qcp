@@ -2,18 +2,21 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
 
     <title>Quoridor Corner Puzzles</title>
 
     <meta name="description" content="Mini puzzle game: rearrange the four pawns in the board corner - a Quoridor spinoff">
     <meta name="theme-color" content="#4475DD">
 
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 16 16%27%3E%3Crect width=%2716%27 height=%2716%27 rx=%273%27 fill=%27%234475DD%27/%3E%3Ccircle cx=%275.5%27 cy=%275.5%27 r=%272.6%27 fill=%27%23c3a417%27/%3E%3Ccircle cx=%2710.5%27 cy=%2710.5%27 r=%272.6%27 fill=%27%233e7c4a%27/%3E%3C/svg%3E">
     <link rel="stylesheet" href="style.css">
 
     <script src="js/game.js"></script>
     <script src="js/puzzles.js"></script>
+    <script src="js/solver.js"></script>
     <script src="js/view.js"></script>
     <script src="js/controller.js"></script>
 </head>
@@ -22,46 +25,88 @@
         <div class="title_row">
             <h1>Quoridor Corner Puzzles</h1>
             <select id="puzzle_select" class="seat_select puzzle_select" aria-label="choose puzzle"></select>
+            <!-- <span id="build_badge" title="game build">v?</span> -->
         </div>
         <div class="gridcontainer1">
             <div class="button_container above left">
-                <button type="button" id="restart_button" class="button above undo">restart</button>
-                <button type="button" id="undo_button" class="button above redo">undo</button>
+                <button type="button" id="restart_button" class="button above restart" title="Restart puzzle">🔄</button>
+                <button type="button" id="undo_button" class="button above undo" title="Undo last move">↩️</button>
+                <button type="button" id="random_button" class="button above random" title="Random puzzle">🎲</button>
+                <button type="button" id="hint_button" class="button above hint" title="Get a hint">💡</button>
             </div>
             <div class="button_container above right">
-                <button type="button" id="hint_button" class="button above hint">hint</button>
-                <button type="button" id="about_button" class="button above about">about</button>
+                <button type="button" id="streak_button" class="button above streakmode" title="Streak mode">🔥</button>
+                <button type="button" id="mode_button" class="button above mode" title="Cycle Mode">📍</button>
+                <button type="button" id="about_button" class="button above about" title="About game">ℹ️</button>
             </div>
         </div>
         <div id="board_table_container">
-            <div class="fade_box in hidden" id="about_box">
-                <div>
+                        <div class="fade_box in hidden" id="about_box">
+                <div class="about-content">
                     <h1>Corner Puzzles</h1>
-                    <p>
-                        A mini puzzle game spun off from
-                        <a href="https://github.com/gorisanson/quoridor-ai" target="_blank" rel="noopener">Kyutae Lee's Quoridor AI</a>
-                        (4-player adaptation).
-                    </p>
-                    <p>
-                        <span class="thick">Goal:</span> rearrange the four pawns in the marked 2x2 corner block
-                        into the <span class="thick">target arrangement</span> shown at the side of the board.
-                    </p>
-                    <p>
-                        <span class="thick">Rules:</span><br>
-                        - Turn order is fixed: Yellow &rarr; Black &rarr; Blue &rarr; Green; every pawn moves every turn<br>
-                        - Moves: step to an adjacent cell; jump straight over an adjacent pawn;<br>
-                        &nbsp;&nbsp;diagonal jump beside a pawn when the straight jump is impossible<br>
-                        - No walls, and no pawn may ever land on its own goal line<br>
-                        &nbsp;&nbsp;(the colored bars at the board edges show whose goal line it is)<br>
-                        - Moves stay inside the un-shaded corner region<br>
-                        - The pawn starting on the corner cell always moves first
-                    </p>
-                    <p>
-                        <span class="thick">Hint:</span> the hint button re-solves the puzzle from the current
-                        position (provably shortest) and shows the next best move. Par = the optimal move count.
-                    </p>
-                    <p><span class="thick">Stars:</span> 3 for par, 2 within par+2, otherwise 1.</p>
-                    <button type="button" id="about_close_button" class="close">close</button>
+                    <p>A mini puzzle game spun off from <a href="https://github.com/gorisanson/quoridor-ai" target="_blank" rel="noopener">Kyutae Lee's Quoridor AI</a> (4-player adaptation).</p>
+                    
+                    <div class="about-section">
+                        <h2>Goal</h2>
+                        <p>Rearrange the four pawns in the marked 2x2 corner block into the <strong>target arrangement</strong> shown beside the board.</p>
+                    </div>
+
+                    <div class="about-section">
+                        <h2>Rules</h2>
+                        <ul>
+                            <li><strong>Turn Order:</strong> Fixed: Yellow 🟡 &rarr; Red 🔴 &rarr; Blue 🔵 &rarr; Green 🟢. Every pawn moves every turn.</li>
+                            <li><strong>Moves:</strong> Step to an adjacent cell, jump straight over an adjacent pawn, or diagonal jump beside a pawn if the straight jump is blocked.</li>
+                            <li><strong>No Walls:</strong> Unlike standard Quoridor, there are no walls here.</li>
+                            <li><strong>Goal Lines:</strong> No pawn may ever land on its own goal line (the colored bars at the board edges).</li>
+                            <li><strong>Region:</strong> Moves must stay inside the un-shaded corner region.</li>
+                            <li><strong>First Move:</strong> The pawn starting on the corner cell always moves first.</li>
+                        </ul>
+                    </div>
+
+                    <div class="about-section">
+                        <h2>Controls</h2>
+                        <div class="emoji-grid">
+                            <div class="emoji-row"><span class="big-emoji">🔄</span><span><strong>Restart:</strong> Reset the current puzzle.</span></div>
+                            <div class="emoji-row"><span class="big-emoji">↩️</span><span><strong>Undo:</strong> Take back your last move.</span></div>
+                            <div class="emoji-row"><span class="big-emoji">🎲</span><span><strong>Random:</strong> Load a random puzzle.</span></div>
+                            <div class="emoji-row"><span class="big-emoji">💡</span><span><strong>Hint:</strong> Shows the next best move (provably shortest). Par = optimal move count.</span></div>
+                            <div class="emoji-row"><span class="big-emoji">🔥</span><span><strong>Streak:</strong> Endless mode. Solve chained puzzles without failing!</span></div>
+                            <div class="emoji-row"><span class="big-emoji">📍</span><span><strong>Mode:</strong> Cycles between Normal, Round-Trip (↔️), and Grand Tour (🗺️). In Streak mode, cycles difficulty (🟢🟡🔴📈).</span></div>
+                            <div class="emoji-row"><span class="big-emoji">ℹ️</span><span><strong>About:</strong> Opens this info panel.</span></div>
+                        </div>
+                    </div>
+
+                    <div class="about-section">
+                        <h2>Modes & Scoring</h2>
+                        <ul>
+                            <li><strong>Stars:</strong> 3 stars for matching par, 2 within par+2, otherwise 1 star.</li>
+                            <li><strong>Round Trip (↔️):</strong> Solve to the target, then solve it back to the start.</li>
+                            <li><strong>Grand Tour (🗺️):</strong> Visit all 6 target arrangements in one run. Click any of the 6 mini-cards to start the tour from there.</li>
+                        </ul>
+                    </div>
+
+                    <button type="button" id="about_close_button" class="close">Close</button>
+                </div>
+            </div>
+            <!-- goal lines: colored bar outside each edge = the goal line no pawn may land on -->
+            <div id="goal_lines" aria-hidden="true">
+                <div class="goal_line top"></div>
+                <div class="goal_line right"></div>
+                <div class="goal_line bottom"></div>
+                <div class="goal_line left"></div>
+            </div>
+           <div class="fade_box in hidden" id="streak_dialog">
+                <div class="streak-content">
+                    <h2>Streak mode</h2>
+                    <p>Solve chained random puzzles. Your streak grows with every solve.</p>
+                    <div class="streak_choices">
+                        <button type="button" id="streak_easy_button" class="streak_choice">🟢 easy<br><span class="small">par 5-7</span></button>
+                        <button type="button" id="streak_medium_button" class="streak_choice">🟡 medium<br><span class="small">par 8-10</span></button>
+                        <button type="button" id="streak_hard_button" class="streak_choice">🔴 hard<br><span class="small">par 11+</span></button>
+                        <button type="button" id="streak_steep_button" class="streak_choice steep">📈 steep<br><span class="small">climbs while near par</span></button>
+                    </div>
+                    <p id="streak_best" class="small"></p>
+                    <button type="button" id="streak_cancel_button" class="close">cancel</button>
                 </div>
             </div>
             <table id="board_table"></table>
@@ -76,6 +121,7 @@
                     <div class="stat"><span class="stat_label">moves</span><span class="stat_value" id="stat_moves">0</span></div>
                     <div class="stat"><span class="stat_label">par</span><span class="stat_value" id="stat_par">-</span></div>
                     <div class="stat"><span class="stat_label">hints</span><span class="stat_value" id="stat_hints">0</span></div>
+                    <div class="stat"><span class="stat_label">streak</span><span class="stat_value" id="stat_streak">&mdash;</span></div>
                 </div>
                 <div id="hint_text"></div>
             </div>
@@ -86,6 +132,25 @@
             </div>
         </div>
     </div>
+    
+    <!-- Hidden original buttons to prevent JS errors before we update controller.js/view.js -->
+    <div style="display:none;">
+        <button type="button" id="roundtrip_button" class="roundtrip_toggle" title="solve there and back again">round trip &#8634;</button>
+        <button type="button" id="tour_button" class="roundtrip_toggle tour_toggle" title="visit all 6 arrangements">tour</button>
+    </div>
+    
+    <script>
+        "use strict";
+        // build stamp: matches the service-worker cache version
+        fetch('sw.js', { cache: 'no-store' }).then(r => r.text()).then(t => {
+            const m = /CACHE_NAME = '([^']+)';/.exec(t);
+            const v = m ? m[1].replace('corner-puzzles-', '') : '?';
+            const el = document.getElementById('build_badge');
+            if (el !== null) el.textContent = v;
+            console.log('corner puzzles build: v' + v);
+        });
+    </script>
+
     <script>
         "use strict";
         const controller = new Controller();
@@ -103,6 +168,16 @@
             view.setUIForTouchDevice();
             window.removeEventListener('touchstart', onFirstTouch, false);
         }, false);
+    </script>
+    <script>
+        "use strict";
+        if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+            window.addEventListener('load', function () {
+                navigator.serviceWorker.register('sw.js').catch(function (e) {
+                    console.log('service worker not registered:', e);
+                });
+            });
+        }
     </script>
     <noscript>This site needs JavaScript enabled to work.</noscript>
 </body>
