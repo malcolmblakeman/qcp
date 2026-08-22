@@ -6,8 +6,29 @@ A self-contained mini puzzle game spun off from the 4-player Quoridor project.
 Rearrange four pawns in a board corner into a target arrangement - every puzzle
 has a provably optimal solution (found by BFS, verified by the game engine).
 
-**8 puzzles** (4 board corners x Swap / Rotate types) - a hint button re-solves
-from your live position in a background worker, par + star ratings included.
+**488 puzzles** - 8 featured plus the full ladder: every ordered pair of the
+6 valid arrangements per corner (120), each playable with **any pawn opening**
+(the corner piece by default, or Yellow / Red / Blue / Green - every opener of
+every pair is solvable, 360 opener variants with their own pars). All
+engine-verified, par 5-14.
+
+- **grand tour** (button next to the selector): visit **all 6 arrangements**
+  of the corner in one continuous game, in any order. Exact par computed by
+  held-karp over turn-aware leg distances (35-39 moves); the side panel shows
+  your 6 stops with checkmarks; hints route you optimally; playback walks the
+  whole tour stop by stop
+- **round trip mode** (toggle next to the puzzle selector): solve there,
+  then solve **back** - one continuous game. The return leg has its own par
+  (the asymmetry is real: going back is a different puzzle), stars are rated
+  against the combined par, and "optimal solution" playback shows the full
+  round trip
+- a hint button re-solves from your live position in a background worker
+  (works mid-round-trip too)
+
+- **random** button: jump to a random ladder puzzle
+- **streak mode**: chained random puzzles - easy (par 5-7), medium (8-10),
+  hard (11+), or **steep** (climbs while you stay near par, resets to easy
+  when you slip). Best streaks are remembered per mode.
 
 ## Play
 
@@ -21,12 +42,17 @@ the folder with any static server, e.g. `python3 -m http.server`).
 - Pick a puzzle in the selector under the title (8 puzzles: 4 board corners x
   Swap / Rotate; sorted easiest first)
 - Rearrange the marked 2x2 corner block into the **target** shown at the side
-- Turn order is fixed (Yellow > Black > Blue > Green); every pawn moves every
+- Turn order is fixed (Yellow > Red > Blue > Green); every pawn moves every
+- Opener variants (labelled "X opens"): identical rules and board, a different pawn makes the first move
   turn; steps, straight jumps and diagonal jumps allowed; no walls; no pawn
-  may ever land on its own goal line (the colored edge bars); moves stay in
-  the un-shaded region
+  may ever land on its own goal line - the colored bars outside the board
+  edges mark each player's goal line (yellow bottom, blue top, red left,
+  green right); moves stay in the un-shaded region
 - **hint** re-solves the puzzle from the live position (provably shortest,
   in a background worker) and shows the next best move
+- **playback**: after solving, watch your own replay or the optimal solution
+  animated on the board
+- **PWA**: installable and works offline (service worker caches everything)
 - Stars: 3 at par, 2 within par+2, else 1
 
 ## Files
@@ -45,8 +71,6 @@ real game engine. ## Credits & License
 
 Engine derived from [Kyutae Lee's Quoridor AI](https://github.com/gorisanson/quoridor-ai)
 (MIT), adapted to 4 players, then spun off into this puzzle game. See `LICENSE`.
-
-# Teaser for 4 Player Quoridor 'Coming Soon!'
 
 ## Tests
 
