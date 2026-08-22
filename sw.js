@@ -8,7 +8,7 @@ const SHELL = [
     './js/game.js', './js/puzzles.js', './js/solver.js',
     './js/view.js', './js/controller.js', './js/hint_worker.js'
 ];
-const ICONS = ['./icons/icon-192.png', './icons/icon-512.png', './icons/icon-maskable-512.png'];
+const ICONS = ['./icons/puzzle-192.png', './icons/puzzle-512.png', './icons/puzzle-maskable-512.png'];
 
 self.addEventListener('install', function (event) {
     event.waitUntil(
