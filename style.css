@@ -1455,3 +1455,33 @@ body { margin: 0; }
         font-size: calc(0.95 * var(--font-size)) !important;
     }
 }
+
+/* ====== IPHONE / MOBILE OVERLAP FIX ====== */
+@media (max-width: 560px) {
+    /* Unlock the screen height so elements can stack naturally */
+    .gridcontainer0 {
+        height: auto !important;
+        min-height: 100dvh; /* Fill the screen, but allow growing if needed */
+        align-content: start !important; /* Stop vertical centering which causes overlap */
+        padding-top: 15px !important;
+        padding-bottom: 25px !important; /* Room for the bottom buttons */
+        grid-gap: 12px !important;
+    }
+
+    /* Shrink the board just enough to leave room for stats and buttons */
+    :root {
+        --board-table-side-length: 82vmin !important; 
+    }
+
+    /* Ensure bottom panel elements don't overlap each other */
+    .gridcontainer2 {
+        flex-shrink: 0 !important;
+        gap: 15px !important; 
+        margin-top: 10px !important;
+    }
+    
+    /* Space out the confirm/cancel buttons */
+    .gridcontainer2 .button_container.below {
+        gap: 15px !important;
+    }
+}
