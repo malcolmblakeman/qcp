@@ -33,7 +33,7 @@ const NUM_OF_PLAYERS = 4;
 const NUM_OF_WALLS_PER_PLAYER = 5;
 
 const SEAT_NAMES = ["North", "East", "South", "West"];
-const PAWN_COLOR_NAMES = ["Yellow", "Black", "Blue", "Green"];
+const PAWN_COLOR_NAMES = ["Yellow", "Red", "Blue", "Green"];
 
 // start positions, index === player index
 const START_POSITIONS = [

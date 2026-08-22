@@ -23,8 +23,11 @@ function cpOnOwnGoal(pi, r, c) {
 * region: {r0, r1, c0, c1}
 * Returns array of moves [{pi, dest, kind}] or null (no solution / timeout).
 */
-function cpSolve(startPos, startTurn, targetPos, region) {
+function cpSolve(startPos, startTurn, targetPos, region, opts) {
     startTurn = ((startTurn % 4) + 4) % 4;   // engine turn is an absolute ply counter
+    opts = opts || {};
+    const allowStraight = opts.straight !== false;    // straight jumps (2 cells, same axis)
+    const allowDiagonal = opts.diagonal !== false;    // diagonal jumps beside a pawn
     const inRegion = (r, c) => r >= region.r0 && r <= region.r1 && c >= region.c0 && c <= region.c1;
     // region cell tables
     const cellToIdx = new Int8Array(81).fill(-1);
@@ -46,7 +49,8 @@ function cpSolve(startPos, startTurn, targetPos, region) {
             if (!inRegion(nr, nc)) continue;
             table[ci].push([cellToIdx[nr * 9 + nc], 0]);
             const sr = nr + CP_DIRS[d][0], sc = nc + CP_DIRS[d][1];
-            if (inRegion(sr, sc)) table[ci].push([cellToIdx[sr * 9 + sc], 1]);
+            if (allowStraight && inRegion(sr, sc)) table[ci].push([cellToIdx[sr * 9 + sc], 1]);
+            if (!allowDiagonal) continue;
             for (const e of (d < 2 ? [[0, -1], [0, 1]] : [[-1, 0], [1, 0]])) {
                 const dr = nr + e[0], dc = nc + e[1];
                 if (inRegion(dr, dc)) table[ci].push([cellToIdx[dr * 9 + dc], 2]);
